@@ -713,6 +713,141 @@
     display: none;
   }
 
+  /* ── OBSERVAÇÕES / LINK ── */
+  .obs-cell { position: relative; }
+
+  .obs-link-wrap {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 6px;
+  }
+
+  .obs-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    color: var(--blue);
+    font-size: 12px;
+    font-family: 'IBM Plex Sans', sans-serif;
+    text-decoration: none;
+    padding: 3px 8px;
+    border-radius: 3px;
+    background: var(--blue-soft);
+    border: 1px solid #90CAF9;
+    transition: all .15s;
+    white-space: nowrap;
+    overflow: hidden;
+    max-width: 150px;
+    text-overflow: ellipsis;
+  }
+  .obs-link:hover {
+    background: #BBDEFB;
+    border-color: var(--blue);
+    text-decoration: none;
+  }
+  .obs-link .link-icon { font-size: 11px; flex-shrink: 0; }
+
+  .obs-edit-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--gray-500);
+    font-size: 13px;
+    padding: 3px 5px;
+    border-radius: 3px;
+    transition: all .15s;
+    flex-shrink: 0;
+    line-height: 1;
+  }
+  .obs-edit-btn:hover { color: var(--green-600); background: var(--green-100); }
+
+  .obs-empty-btn {
+    width: 100%;
+    background: none;
+    border: 1px dashed var(--gray-200);
+    border-radius: 3px;
+    color: var(--gray-500);
+    font-size: 11px;
+    font-family: 'IBM Plex Sans', sans-serif;
+    padding: 5px 8px;
+    cursor: pointer;
+    text-align: left;
+    transition: all .15s;
+  }
+  .obs-empty-btn:hover { border-color: var(--green-600); color: var(--green-600); background: var(--green-100); }
+
+  /* Modal de edição de link */
+  .link-modal-overlay {
+    display: none;
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,.6);
+    z-index: 300;
+    align-items: center;
+    justify-content: center;
+  }
+  .link-modal-overlay.open { display: flex; }
+  .link-modal {
+    background: var(--green-800);
+    border: 1px solid var(--green-600);
+    border-top: 3px solid var(--gold);
+    border-radius: 4px;
+    padding: 24px 28px;
+    width: 540px;
+    max-width: 95vw;
+    box-shadow: 0 16px 48px rgba(0,0,0,.5);
+  }
+  .link-modal h3 {
+    font-family: 'Rajdhani', sans-serif;
+    color: var(--gold-light);
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    margin-bottom: 16px;
+  }
+  .link-modal label {
+    display: block;
+    font-size: 11px;
+    color: var(--green-400);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+    margin-top: 14px;
+  }
+  .link-modal label:first-of-type { margin-top: 0; }
+  .link-modal input[type="text"], .link-modal input[type="url"] {
+    width: 100%;
+    background: rgba(0,0,0,.3);
+    border: 1px solid var(--green-600);
+    border-radius: 3px;
+    padding: 9px 12px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    color: var(--white);
+    outline: none;
+    transition: border-color .15s;
+  }
+  .link-modal input:focus { border-color: var(--gold); }
+  .link-modal input::placeholder { color: var(--gray-500); }
+  .link-modal-actions {
+    display: flex; gap: 10px;
+    margin-top: 20px; justify-content: flex-end;
+    align-items: center;
+  }
+  .link-modal-actions .btn-remove {
+    margin-right: auto;
+    background: transparent;
+    border: 1px solid var(--red);
+    color: #EF9A9A;
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 12px;
+    padding: 6px 12px;
+    border-radius: 3px;
+    cursor: pointer;
+    transition: all .15s;
+  }
+  .link-modal-actions .btn-remove:hover { background: rgba(198,40,40,.15); }
+
   /* ── PRINT ── */
   @media print {
     body { background: white; padding: 0; }
@@ -814,7 +949,7 @@
           <th class="col-destino">Destino</th>
           <th class="col-resumo">Resumo</th>
           <th class="col-sit">Situação</th>
-          <th class="col-obs">Observações</th>
+          <th class="col-obs">Link SEI</th>
           <th class="col-del"></th>
         </tr>
       </thead>
@@ -865,6 +1000,22 @@
       </div>
 
       <div class="dash-footer" id="dash-footer">—</div>
+    </div>
+  </div>
+
+  <!-- LINK EDIT MODAL -->
+  <div class="link-modal-overlay" id="link-modal">
+    <div class="link-modal">
+      <h3>🔗 LINK DO PROCESSO</h3>
+      <label>URL do processo (SEI ou outro sistema)</label>
+      <input type="url" id="link-url-input" placeholder="https://sei.ma.gov.br/sei/controlador.php?..." />
+      <label>Rótulo exibido (opcional)</label>
+      <input type="text" id="link-label-input" placeholder="Ex: Abrir no SEI" />
+      <div class="link-modal-actions">
+        <button class="btn-remove" id="link-remove-btn" onclick="removeLink()">🗑 Remover link</button>
+        <button class="btn btn-danger" onclick="closeLinkModal()">Cancelar</button>
+        <button class="btn btn-primary" onclick="saveLink()">💾 Salvar</button>
+      </div>
     </div>
   </div>
 
@@ -1044,7 +1195,7 @@
           ${selectOpts}
         </select>
       </td>
-      <td><input type="text" placeholder="Observações..." value="${d.obs||''}" onchange="save()"></td>
+      <td class="obs-cell" data-url="${(d.obs||'').replace(/"/g,'&quot;')}" data-label="${(d.obsLabel||'').replace(/"/g,'&quot;')}">${buildObsCell(d.obs||'', d.obsLabel||'')}</td>
       <td class="td-del"><button class="del-btn" onclick="deleteRow(this)" title="Excluir linha">✕</button></td>
     `;
 
@@ -1122,7 +1273,8 @@
         destino:selects[1].value === '__outro__' ? '' : selects[1].value,
         resumo: tr.querySelector('textarea').value,
         sit:    selects[2].value,
-        obs:    inputs[2].value,
+        obs:      tr.querySelector('.obs-cell').dataset.url   || '',
+        obsLabel: tr.querySelector('.obs-cell').dataset.label || '',
       };
     });
   }
@@ -1337,7 +1489,7 @@
   // Keyboard shortcuts
   document.addEventListener('keydown', e => {
     if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') { e.preventDefault(); addRow({}); }
-    if (e.key === 'Escape') { closeConfig(); closeDashboard(); }
+    if (e.key === 'Escape') { closeConfig(); closeDashboard(); closeLinkModal(); }
   });
 
   // Status inicial
@@ -1545,10 +1697,66 @@
     destroyCharts();
   }
 
-  // Fechar dashboard clicando fora
-  document.getElementById('dash-overlay').addEventListener('click', function(e) {
-    if (e.target === this) closeDashboard();
+  // ── LINK / OBSERVAÇÕES ────────────────────────────────────
+  let _linkTargetCell = null;
+
+  function buildObsCell(url, label) {
+    if (url) {
+      const display   = label || 'Abrir processo';
+      const safeUrl   = url.replace(/"/g, '&quot;');
+      const safeLabel = display.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      return `<div class="obs-link-wrap">
+        <a class="obs-link" href="${safeUrl}" target="_blank" rel="noopener" title="${safeUrl}">
+          <span class="link-icon">🔗</span>${safeLabel}
+        </a>
+        <button class="obs-edit-btn" onclick="openLinkModal(this.closest('.obs-cell'))" title="Editar link">✏</button>
+      </div>`;
+    }
+    return `<button class="obs-empty-btn" onclick="openLinkModal(this.closest('.obs-cell'))">+ Adicionar link</button>`;
+  }
+
+  function openLinkModal(cell) {
+    _linkTargetCell = cell;
+    const url   = cell.dataset.url   || '';
+    const label = cell.dataset.label || '';
+    document.getElementById('link-url-input').value   = url;
+    document.getElementById('link-label-input').value = label;
+    document.getElementById('link-remove-btn').style.display = url ? 'inline-flex' : 'none';
+    document.getElementById('link-modal').classList.add('open');
+    setTimeout(() => document.getElementById('link-url-input').focus(), 50);
+  }
+
+  function closeLinkModal() {
+    document.getElementById('link-modal').classList.remove('open');
+    _linkTargetCell = null;
+  }
+
+  function saveLink() {
+    if (!_linkTargetCell) return;
+    const url   = document.getElementById('link-url-input').value.trim();
+    const label = document.getElementById('link-label-input').value.trim();
+    _linkTargetCell.dataset.url   = url;
+    _linkTargetCell.dataset.label = label;
+    _linkTargetCell.innerHTML     = buildObsCell(url, label);
+    closeLinkModal();
+    save();
+  }
+
+  function removeLink() {
+    if (!_linkTargetCell) return;
+    _linkTargetCell.dataset.url   = '';
+    _linkTargetCell.dataset.label = '';
+    _linkTargetCell.innerHTML     = buildObsCell('', '');
+    closeLinkModal();
+    save();
+  }
+
+  // Fechar modal clicando fora
+  document.getElementById('link-modal').addEventListener('click', function(e) {
+    if (e.target === this) closeLinkModal();
   });
+
+
 
 </script>
 
