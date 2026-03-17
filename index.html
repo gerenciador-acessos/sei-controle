@@ -1138,9 +1138,17 @@
   function load() {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
-      if (raw) { JSON.parse(raw).forEach(r => addRow(r)); applyMaskToLoaded(); }
-      else { for (let i = 0; i < 10; i++) addRow({}); }
-    } catch(e) { for (let i = 0; i < 10; i++) addRow({}); }
+      if (raw) {
+        JSON.parse(raw).forEach(r => addRow(r));
+        applyMaskToLoaded();
+      } else if (!getGasUrl()) {
+        // Só cria linhas em branco se não houver Sheets configurado
+        for (let i = 0; i < 10; i++) addRow({});
+      }
+      // Se tem Sheets configurado e localStorage vazio, aguarda loadFromSheets()
+    } catch(e) {
+      if (!getGasUrl()) { for (let i = 0; i < 10; i++) addRow({}); }
+    }
   }
 
   // ── CARREGA DADOS DO SHEETS (fonte de verdade) ───────────────
